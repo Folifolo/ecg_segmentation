@@ -3,7 +3,7 @@ import tensorflow as tf
 import pandas as pd
 
 freq = 500  # частота дискретизации
-tolerance = (150 / 1000) * freq  # допустимое временное окно 150 мс
+tolerance = (150 / 1000) * freq * 60  # допустимое временное окно 150 мс
 
 
 def change_mask(sample):
@@ -42,7 +42,7 @@ def comprassion(mask1, mask2, start_or_end):
     """
     сравнивает два отведения по одному полю
     :param mask1:
-    :param mask2:
+    :param mask2: true
     :param start_or_end: 0 -- начало интервала, 1 -- конец
     :return:
     """
@@ -51,10 +51,19 @@ def comprassion(mask1, mask2, start_or_end):
     fn = []
     error = []
 
+    pulse = 0
+
+    for count in range(len(mask2[start_or_end])-1):
+        pulse += mask2[start_or_end][count+1] - mask2[start_or_end][count]
+    if pulse == 0:
+        pulse = 70
+    else:
+        pulse =1/(pulse / (count+1) /500)*60
+    print (tolerance/pulse)
     for p_1 in mask1[start_or_end]:
         flag = False
         for p_2 in mask2[start_or_end]:
-            if p_1 + tolerance >= p_2 > p_1 - tolerance:
+            if p_1 + (tolerance/pulse) >= p_2 > p_1 - (tolerance/pulse):
                 tp.append(p_1)
                 error.append((p_1 - p_2) / freq)
                 mask2[start_or_end].remove(p_2)
@@ -218,7 +227,6 @@ def preproc (sample):
                     if sample[i+j+1] == sample[i]:
                         sample[i+1:i+j] = sample[i]
     return  sample
-
 
 if __name__ == "__main__":
     from sklearn.model_selection import train_test_split
