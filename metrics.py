@@ -59,7 +59,6 @@ def comprassion(mask1, mask2, start_or_end):
         pulse = 70
     else:
         pulse =1/(pulse / (count+1) /500)*60
-    print (tolerance/pulse)
     for p_1 in mask1[start_or_end]:
         flag = False
         for p_2 in mask2[start_or_end]:
@@ -207,12 +206,45 @@ def statistics(y_true, y_pred):
     for index in df_res.columns:
         for i in range(len(df_errors.at[0, index])):
             df_errors.at[0, index][i] = df_errors.loc[0, index][i]*1000
-        #df_errors.at[0, index] = df_errors.loc[0, index]/500
-        df_res.at['Se', index] = df_stat.loc['tp', index] / (df_stat.loc['tp', index] + df_stat.loc['fn', index])
-        df_res.at['PPV', index] = df_stat.loc['tp', index] / (df_stat.loc['tp', index] + df_stat.loc['fp', index])
-        df_res.at['sigma^2', index] = np.var(df_errors.loc[0, index])
-        df_res.at['m', index] = np.mean(df_errors.loc[0, index])
+        if df_stat.loc['tp', index] == 0:
+            if df_stat.loc['fn', index] == 0 and df_stat.loc['fp', index] != 0:
+                df_res.at['Se', index] = 1
+                df_res.at['PPV', index] = 0
+                df_res.at['sigma^2', index] = 0
+                df_res.at['m', index] = 0
+            elif df_stat.loc['fn', index] != 0 and df_stat.loc['fp', index] == 0:
+                df_res.at['Se', index] = 0
+                df_res.at['PPV', index] = 1
+                df_res.at['sigma^2', index] = 0
+                df_res.at['m', index] = 0
+            elif df_stat.loc['fn', index] != 0 and df_stat.loc['fp', index] != 0:
+                df_res.at['Se', index] = 0
+                df_res.at['PPV', index] = 0
+                df_res.at['sigma^2', index] = 0
+                df_res.at['m', index] = 0
+            elif df_stat.loc['fn', index] == 0 and df_stat.loc['fp', index] == 0:
+                df_res.at['Se', index] = 1
+                df_res.at['PPV', index] = 1
+                df_res.at['sigma^2', index] = 0
+                df_res.at['m', index] = 0
+        else:
+            df_res.at['Se', index] = df_stat.loc['tp', index] / (df_stat.loc['tp', index] + df_stat.loc['fn', index])
+            df_res.at['PPV', index] = df_stat.loc['tp', index] / (df_stat.loc['tp', index] + df_stat.loc['fp', index])
+            df_res.at['sigma^2', index] = np.var(df_errors.loc[0, index])
+            df_res.at['m', index] = np.mean(df_errors.loc[0, index])
     return df_res
+
+
+def F_score(stat):
+    presision = 0
+    recall = 0
+    for index in stat.columns:
+        recall += stat.loc['Se', index]
+        presision += stat.loc['PPV', index]
+    presision = presision/6
+    recall = recall/6
+    F = 2*((presision*recall)/(presision+recall))
+    return F
 
 def preproc (sample):
     """

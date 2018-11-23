@@ -1,8 +1,4 @@
-import numpy as np
 from keras import backend as K
-from keras.callbacks import (
-    TensorBoard
-)
 from keras.layers import (
     LSTM,
     Bidirectional,
@@ -15,7 +11,7 @@ from keras.models import (
     Sequential, load_model
 )
 
-def make_model(num_leads_signal):
+def make_model(num_leads_signal = 12):
     model = Sequential()
 
     model.add(Conv1D(32, kernel_size=8,
@@ -29,7 +25,7 @@ def make_model(num_leads_signal):
     model.add(Conv1D(32, kernel_size=8, activation=K.elu, padding='same'))
     model.add(MaxPooling1D(pool_size=2))
 
-    model.add(Bidirectional(LSTM(50, return_sequences=True)))
+#    model.add(Bidirectional(LSTM(50, return_sequences=True)))
 
     model.add(UpSampling1D(2))
     model.add(Conv1D(32, kernel_size=8, activation=K.elu, padding='same'))
@@ -41,4 +37,9 @@ def make_model(num_leads_signal):
     model.add(Conv1D(32, kernel_size=8, activation=K.elu, padding='same'))
     model.add(Dense(4, activation='softmax'))
 
+    model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy'])
     return model
+if __name__ == "__main__":
+    from keras.utils import plot_model
+    model = make_model()
+    plot_model(model, to_file='model.png')
